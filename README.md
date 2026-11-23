@@ -12,3 +12,25 @@
 ## 專案結構與維護
 
 專案參考 Karpathy 的 LLM Wiki 作法。`raw/papers/` 保存原始資料，`wiki/` 存放整理後的教材，`slides/` 與 `assets/` 存放簡報及共用貼圖。[AGENTS.md](AGENTS.md)記錄代理匯入來源、查詢與檢查內容的方式，[維護紀錄](wiki/log.md)保存更新與驗證結果。
+
+## Loop / Graph 製作流程
+
+```mermaid
+flowchart TD
+    source["取得來源資料"] --> lookup["查詢 Wiki 與原始來源"]
+    lookup --> draft["整理教學節點：先備條件、操作、完成條件"]
+    draft --> content{"指令、結果與節點關係正確？"}
+    content -->|需修正| lookup
+    content -->|通過| remaining{"還有待整理的節點？"}
+    remaining -->|有，處理下一個節點| lookup
+    remaining -->|全部完成| outline{"使用者確認大綱？"}
+    outline -->|需調整| draft
+    outline -->|確認| slides["製作 Graph 版 HTML 簡報"]
+    slides --> browser{"瀏覽器驗收結果"}
+    browser -->|教材內容有誤| lookup
+    browser -->|跳轉、互動或版面有誤| slides
+    browser -->|通過| done["完成簡報並記錄結果"]
+```
+
+- **Loop** · 同一個 Codex 代理逐一查詢、整理、檢查教學節點；發現問題時修正該節點，並重查相連的前置步驟或完成條件。
+- **Graph** · 大綱由使用者確認，驗收結果決定下一步。Git 指令與提交圖的分支指向先用本機 Git 核對，再用瀏覽器檢查循序翻頁、地圖跳轉和圖表切換。出錯時回到對應步驟，重做受影響的部分。
