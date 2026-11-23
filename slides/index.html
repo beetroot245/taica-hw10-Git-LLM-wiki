@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="用 Windows PowerShell 從零學 Git，從第一次提交到在 GitHub 開出 Pull Request。">
+  <title>Git 從零開始｜Git 教學 Wiki</title>
+  <link rel="stylesheet" href="slides.css">
+  <script src="slides.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">&gt;_</span><span>Git 教學 Wiki</span></div>
+    <div class="top-actions">
+      <a href="#start" data-slide-link>課程地圖</a>
+      <a class="wiki-link" href="../wiki/index.md">Wiki 教材</a>
+      <button id="fullscreen" class="fullscreen" type="button" hidden><span class="expand-icon" aria-hidden="true"></span><span>全螢幕</span></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="章節">
+      <h2>課程章節</h2>
+      <ol>
+        <li><a href="#start"><span>01</span>課程地圖</a></li>
+        <li><a href="#setup"><span>02</span>安裝與設定</a></li>
+        <li><a href="#workflow"><span>03</span>工作目錄與提交</a></li>
+        <li><a href="#branches"><span>04</span>分支與合併</a></li>
+        <li><a href="#conflict"><span>05</span>處理合併衝突</a></li>
+        <li><a href="#remotes"><span>06</span>遠端儲存庫</a></li>
+        <li><a href="#prepare-pr"><span>07</span>提交與推送</a></li>
+        <li><a href="#open-pr"><span>08</span>開 PR 並驗收</a></li>
+      </ol>
+      <a class="sources-link" href="../wiki/sources/index.md">教材來源</a>
+    </nav>
+
+    <div class="deck">
+      <main id="slides" class="stage" aria-label="Git 教學簡報">
+        <section class="slide course-map" id="start" data-chapter="start" aria-labelledby="title-start">
+          <header class="map-heading">
+            <div>
+              <p class="eyebrow">零基礎入門 · Windows PowerShell</p>
+              <h1 id="title-start">Git 從零開始，<em>開出第一個 PR</em></h1>
+              <p class="lede">依箭頭學習，或點任一節點查看先備條件、操作與完成檢查。</p>
+            </div>
+            <img src="../assets/branch.png" alt="" width="1254" height="1254">
+          </header>
+          <nav class="map-graph" aria-label="Git 課程路徑">
+            <div class="map-lane">
+              <h2>本機練習 <code>git-local-practice</code></h2>
+              <ol class="map-route">
+                <li><a href="#setup" data-slide-link><strong>安裝與設定</strong><span>確認版本與身分</span></a></li>
+                <li><a href="#workflow" data-slide-link><strong>暫存與提交</strong><span>確認即將提交的差異</span></a></li>
+                <li><a href="#branches" data-slide-link><strong>分支與合併</strong><span>確認 main 指向新提交</span></a></li>
+                <li><a href="#conflict" data-slide-link><strong>處理合併衝突</strong><span>確認合併提交</span></a></li>
+              </ol>
+            </div>
+            <p class="map-transition"><span aria-hidden="true">↓</span> 完成本機練習後，另建 GitHub 練習儲存庫</p>
+            <div class="map-lane">
+              <h2>GitHub PR 實作 <code>git-pr-practice</code></h2>
+              <ol class="map-route">
+                <li><a href="#remotes" data-slide-link><strong>認識遠端</strong><span>知道怎麼核對 origin</span></a></li>
+                <li><a href="#prepare-pr" data-slide-link><strong>建分支、提交、推送</strong><span>在遠端看到練習分支</span></a></li>
+                <li><a href="#open-pr" data-slide-link><strong>開 PR 並驗收</strong><span>核對分支與檔案差異</span></a></li>
+              </ol>
+            </div>
+          </nav>
+        </section>
+
+        <section class="slide" id="setup" data-chapter="setup" aria-labelledby="title-setup">
+          <header class="slide-heading">
+            <p class="eyebrow">開始使用 Git</p>
+            <h2 id="title-setup">讓 PowerShell 找到 Git</h2>
+            <p>先備條件是能在 Windows 安裝軟體。安裝 <a href="https://git-scm.com/install/windows">Git for Windows</a> 後，開一個新的 PowerShell 視窗。</p>
+          </header>
+          <div class="lesson-grid">
+            <div class="terminal">
+              <div class="terminal-bar"><span>Windows PowerShell</span></div>
+              <pre><code>git --version
+git config --global user.name (Read-Host 'Commit name')
+git config --global user.email (Read-Host 'Commit email')
+git config --global --get user.name
+git config --global --get user.email</code></pre>
+            </div>
+            <div class="notes">
+              <h3>完成檢查</h3><p>終端機印出 Git 版本，最後兩行顯示提交姓名和信箱。若已設定身分，可用最後兩行核對。</p>
+              <h3>GitHub 登入</h3><p>用來授權遠端操作。先在網頁登入，推送時若出現 Git Credential Manager，再依提示授權。</p>
+            </div>
+          </div>
+          <p class="slide-source"><a href="../wiki/lessons/setup.md">Wiki｜安裝與設定 Git</a></p>
+        </section>
+
+        <section class="slide" id="workflow" data-chapter="workflow" aria-labelledby="title-workflow">
+          <header class="slide-heading">
+            <p class="eyebrow">本機工作流程</p>
+            <h2 id="title-workflow">存檔、暫存、提交</h2>
+            <p>先備條件是 PowerShell 已能執行 Git，且已設定提交身分。</p>
+          </header>
+          <div class="flow">
+            <article><span class="flow-label">Working directory</span><h3>工作目錄</h3><p>此刻正在編輯的檔案。</p></article>
+            <span class="flow-command"><code>git add</code><b aria-hidden="true">→</b></span>
+            <article><span class="flow-label">Staging area</span><h3>暫存區</h3><p>已選入下一次提交的內容。</p></article>
+            <span class="flow-command"><code>git commit</code><b aria-hidden="true">→</b></span>
+            <article><span class="flow-label">Local repository</span><h3>本機儲存庫</h3><p>已記錄的提交與歷史。</p></article>
+          </div>
+          <p class="callout"><strong>用 <code>git status</code> 確認進度。</strong> 暫存後再編輯檔案，新改動會先留在工作目錄。</p>
+          <p class="slide-source"><a href="../wiki/lessons/local-workflow.md">Wiki｜工作目錄、暫存區與提交</a></p>
+        </section>
+
+        <section class="slide" id="stage-changes" data-chapter="workflow" aria-labelledby="title-stage">
+          <header class="slide-heading">
+            <p class="eyebrow">本機練習 · 暫存</p>
+            <h2 id="title-stage">同一個檔案，兩份內容</h2>
+            <p>在能建立新資料夾的位置，使用全新的 <code>git-local-practice</code> 練習。</p>
+          </header>
+          <div class="lesson-grid">
+            <div class="terminal">
+              <div class="terminal-bar"><span>Windows PowerShell</span></div>
+              <pre><code>New-Item -ItemType Directory git-local-practice
+Set-Location git-local-practice
+git init -b main
+Set-Content -LiteralPath notes.txt -Value 'Topic: Git'
+git status --short
+
+git add -- notes.txt
+Set-Content -LiteralPath notes.txt -Value 'Topic: My first Git commit'
+git status --short
+git --no-pager diff -- notes.txt
+git --no-pager diff --staged -- notes.txt</code></pre>
+            </div>
+            <div class="notes">
+              <h3><code>?? notes.txt</code></h3><p>檔案剛建立，Git 尚未追蹤。</p>
+              <h3><code>AM notes.txt</code></h3><p>暫存區已有新增的檔案，工作目錄還有後續修改。</p>
+              <p><code>diff</code> 看尚未暫存的修改，<code>diff --staged</code> 看即將提交的差異。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide" id="first-commit" data-chapter="workflow" aria-labelledby="title-commit">
+          <header class="slide-heading">
+            <p class="eyebrow">本機練習 · 提交</p>
+            <h2 id="title-commit">留下第一筆提交</h2>
+            <p>把最新內容再次加入暫存區，再用一句話說明這次變更。</p>
+          </header>
+          <div class="lesson-grid">
+            <div>
+              <div class="terminal">
+                <div class="terminal-bar"><span>Windows PowerShell</span></div>
+                <pre><code>git add -- notes.txt
+git commit -m "Add Git practice notes"
+git status --short
+git --no-pager log -1 --oneline</code></pre>
+              </div>
+              <p class="callout">狀態應無輸出，歷史應顯示 <code>Add Git practice notes</code>。</p>
+            </div>
+            <div class="art-slot"><img src="../assets/commit.png" alt="" width="1254" height="1254"></div>
+          </div>
+        </section>
+
+        <section class="slide diagram-slide" id="branches" data-chapter="branches" aria-labelledby="title-branches">
+          <header class="slide-heading">
+            <p class="eyebrow">本機練習 · 快轉合併</p>
+            <h2 id="title-branches">快轉時，指向哪一筆提交？</h2>
+            <p>先備條件是已在 <code>git-local-practice</code> 完成第一筆提交 A。圖由左到右讀，接下來會在新分支新增提交 B。</p>
+          </header>
+          <div class="commit-diagram" data-commit-diagram>
+            <div class="diagram-toolbar" hidden role="group" aria-label="快轉合併狀態">
+              <button type="button" data-diagram-step="before" aria-pressed="true">合併前</button>
+              <button type="button" data-diagram-step="after" aria-pressed="false">合併後</button>
+            </div>
+            <div data-diagram-panel="before">
+              <div class="commit-plot" aria-hidden="true">
+                <i class="commit-line" style="--x:26%;--y:53%;--width:48%"></i>
+                <span class="commit-point" style="--x:26%;--y:53%">A</span>
+                <span class="commit-point accent-point" style="--x:74%;--y:53%">B</span>
+                <span class="commit-ref ref-above" style="--x:26%;--y:53%">main</span>
+                <span class="commit-ref ref-below" style="--x:74%;--y:53%">練習分支</span>
+              </div>
+              <p><strong>合併前</strong> · <code>main</code> 指向 A，<code>practice/add-checklist</code> 指向 B。B 接在 A 後面。</p>
+            </div>
+            <div data-diagram-panel="after">
+              <div class="commit-plot" aria-hidden="true">
+                <i class="commit-line" style="--x:26%;--y:53%;--width:48%"></i>
+                <span class="commit-point" style="--x:26%;--y:53%">A</span>
+                <span class="commit-point accent-point" style="--x:74%;--y:53%">B</span>
+                <span class="commit-ref ref-above" style="--x:74%;--y:53%">main</span>
+                <span class="commit-ref ref-below" style="--x:74%;--y:53%">練習分支</span>
+              </div>
+              <p><strong>合併後</strong> · 採用預設快轉行為時，<code>main</code> 從 A 移到 B，兩個分支都指向 B，歷史仍只有 A 和 B。</p>
+            </div>
+          </div>
+          <p class="callout"><strong>下一步</strong> · 建立分支並操作合併。最後在 <code>main</code> 驗證新檔案。</p>
+        </section>
+
+        <section class="slide" id="merge-practice" data-chapter="branches" aria-labelledby="title-merge-practice">
+          <header class="slide-heading">
+            <p class="eyebrow">本機練習 · 分支與合併</p>
+            <h2 id="title-merge-practice">在新分支上改，再合回 main</h2>
+            <p>分支會隨著你在該分支提交而向前移動。合併前，先切到要接收變更的分支。</p>
+          </header>
+          <div class="lesson-grid">
+            <div class="terminal">
+              <div class="terminal-bar"><span>Windows PowerShell</span></div>
+              <pre><code>git switch -c practice/add-checklist
+git branch --show-current
+Set-Content -LiteralPath checklist.txt -Value '- Learn to make a commit'
+git add -- checklist.txt
+git commit -m "Add a Git practice checklist"
+git switch main
+git merge practice/add-checklist
+Get-Content -LiteralPath checklist.txt</code></pre>
+            </div>
+            <div class="notes notes-with-art">
+              <img src="../assets/merge.png" alt="" width="1254" height="1254">
+              <h3>快轉合併</h3><p>本例的 <code>main</code> 可以直接移到新提交。合併後，<code>main</code> 也讀得到 <code>checklist.txt</code>。</p>
+            </div>
+          </div>
+          <p class="slide-source"><a href="../wiki/lessons/branches-and-merge.md">Wiki｜分支、合併與衝突處理</a></p>
+        </section>
+
+        <section class="slide diagram-slide" id="conflict" data-chapter="conflict" aria-labelledby="title-conflict">
+          <header class="slide-heading">
+            <p class="eyebrow">本機練習 · 分歧歷史</p>
+            <h2 id="title-conflict">解決衝突後，歷史如何接起來？</h2>
+            <p>先備條件是已做完本機分支練習，並回到 <code>main</code>。接下來會從同一筆提交往兩邊修改 <code>notes.txt</code> 的同一行。</p>
+          </header>
+          <div class="commit-diagram" data-commit-diagram>
+            <div class="diagram-toolbar" hidden role="group" aria-label="衝突解決狀態">
+              <button type="button" data-diagram-step="before" aria-pressed="true">解決前</button>
+              <button type="button" data-diagram-step="after" aria-pressed="false">解決後</button>
+            </div>
+            <div data-diagram-panel="before">
+              <div class="commit-plot split-plot" aria-hidden="true">
+                <i class="commit-elbow rises" style="--x:14%;--y:27%;--width:32%;--height:23%"></i>
+                <i class="commit-elbow" style="--x:14%;--y:50%;--width:32%;--height:23%"></i>
+                <span class="commit-point" style="--x:14%;--y:50%">A</span>
+                <span class="commit-point accent-point" style="--x:46%;--y:27%">B</span>
+                <span class="commit-point branch-point" style="--x:46%;--y:73%">C</span>
+                <span class="commit-ref ref-right" style="--x:46%;--y:27%">main</span>
+                <span class="commit-ref ref-right" style="--x:46%;--y:73%">練習分支</span>
+              </div>
+              <p><strong>解決前</strong> · B 與 C 都從 A 分歧。本例兩邊改到同一行，Git 暫停合併，等你選定要保留的內容。</p>
+            </div>
+            <div data-diagram-panel="after">
+              <div class="commit-plot split-plot" aria-hidden="true">
+                <i class="commit-elbow rises" style="--x:14%;--y:27%;--width:32%;--height:23%"></i>
+                <i class="commit-elbow" style="--x:14%;--y:50%;--width:32%;--height:23%"></i>
+                <i class="commit-elbow" style="--x:46%;--y:27%;--width:38%;--height:23%"></i>
+                <i class="commit-elbow rises" style="--x:46%;--y:50%;--width:38%;--height:23%"></i>
+                <span class="commit-point" style="--x:14%;--y:50%">A</span>
+                <span class="commit-point" style="--x:46%;--y:27%">B</span>
+                <span class="commit-point branch-point" style="--x:46%;--y:73%">C</span>
+                <span class="commit-point accent-point" style="--x:84%;--y:50%">M</span>
+                <span class="commit-ref ref-above" style="--x:84%;--y:50%">main</span>
+                <span class="commit-ref ref-below" style="--x:46%;--y:73%">練習分支</span>
+              </div>
+              <p><strong>解決後</strong> · 修正、暫存並提交後，<code>main</code> 指向合併提交 M。M 有 B 與 C 兩個父提交。</p>
+            </div>
+          </div>
+          <p class="callout"><strong>下一步</strong> · 製造衝突，觀察 <code>UU notes.txt</code>，再完成合併。</p>
+        </section>
+
+        <section class="slide" id="create-conflict" data-chapter="conflict" aria-labelledby="title-create-conflict">
+          <header class="slide-heading">
+            <p class="eyebrow">本機練習 · 製造衝突</p>
+            <h2 id="title-create-conflict">兩個分支改了同一行</h2>
+            <p>沿用本機練習的 <code>main</code>。讓兩邊各自改寫 <code>notes.txt</code>，看 Git 怎麼回報衝突。</p>
+          </header>
+          <div class="lesson-grid">
+            <div class="terminal">
+              <div class="terminal-bar"><span>Windows PowerShell</span></div>
+              <pre><code>git switch -c practice/change-topic
+Set-Content -LiteralPath notes.txt -Value 'Topic: Learning branches'
+git add -- notes.txt
+git commit -m "Describe branches in the notes"
+git switch main
+Set-Content -LiteralPath notes.txt -Value 'Topic: Learning merges'
+git add -- notes.txt
+git commit -m "Describe merges in the notes"
+git merge practice/change-topic
+git status --short
+Get-Content -LiteralPath notes.txt</code></pre>
+            </div>
+            <div class="notes">
+              <h3><code>UU notes.txt</code></h3><p>Git 暫停合併，等待你決定保留哪些內容。</p>
+              <div class="terminal example">
+                <div class="terminal-bar"><span>notes.txt · 衝突範例</span></div>
+                <pre><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+Topic: Learning merges
+=======
+Topic: Learning branches
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; practice/change-topic</code></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide" id="resolve" data-chapter="conflict" aria-labelledby="title-resolve">
+          <header class="slide-heading">
+            <p class="eyebrow">本機練習 · 完成合併</p>
+            <h2 id="title-resolve">保留兩邊的意思，移除標記</h2>
+            <p>這個練習檔只有一行。讀過兩個版本後，把它改成涵蓋兩邊內容的句子。</p>
+          </header>
+          <div class="lesson-grid">
+            <div class="terminal">
+              <div class="terminal-bar"><span>Windows PowerShell</span></div>
+              <pre><code>Set-Content -LiteralPath notes.txt -Value 'Topic: Learning branches and merges'
+git add -- notes.txt
+git commit -m "Resolve notes topic merge conflict"
+git status --short
+git --no-pager log -4 --oneline --graph</code></pre>
+            </div>
+            <div class="notes">
+              <h3>完成檢查</h3><p>狀態無輸出，歷史裡可以看到合併提交。</p>
+              <h3>想退出練習？</h3><p>仍在合併中時，可用 <code>git merge --abort</code> 回到合併前。</p>
+            </div>
+          </div>
+          <p class="slide-source"><a href="../wiki/lessons/branches-and-merge.md">Wiki｜衝突練習</a></p>
+        </section>
+
+        <section class="slide" id="remotes" data-chapter="remotes" aria-labelledby="title-remotes">
+          <header class="slide-heading">
+            <p class="eyebrow">本機與 GitHub</p>
+            <h2 id="title-remotes">遠端儲存庫與 origin</h2>
+            <p>接下來另建 GitHub 練習儲存庫 <code>git-pr-practice</code>。複製時，Git 通常會把來源命名為 <code>origin</code>。</p>
+          </header>
+          <div class="lesson-grid remote-grid">
+            <dl class="command-list">
+              <div><dt><code>git clone</code></dt><dd>把既有儲存庫複製到本機。</dd></div>
+              <div><dt><code>git remote -v</code></dt><dd>查看遠端名稱和網址。</dd></div>
+              <div><dt><code>git fetch origin</code></dt><dd>下載更新，不改動目前的工作檔案。</dd></div>
+              <div><dt><code>git pull</code></dt><dd>下載更新，再依設定或參數整合。</dd></div>
+              <div><dt><code>git push -u origin …</code></dt><dd>推送分支並設定上游追蹤。</dd></div>
+            </dl>
+            <div class="art-slot"><img src="../assets/remote.png" alt="" width="1254" height="1254"></div>
+          </div>
+          <p class="slide-source"><a href="../wiki/lessons/remotes.md">Wiki｜遠端儲存庫</a></p>
+        </section>
+
+        <section class="slide" id="prepare-pr" data-chapter="prepare-pr" aria-labelledby="title-prepare-pr">
+          <header class="slide-heading">
+            <p class="eyebrow">PR 實作 · 準備分支</p>
+            <h2 id="title-prepare-pr">建立自己的練習儲存庫</h2>
+            <p>先備條件是已登入 GitHub 並設定 Git 提交身分。這個練習使用新的 <code>git-pr-practice</code>，可以設為私人。</p>
+          </header>
+          <div class="lesson-grid">
+            <div class="terminal">
+              <div class="terminal-bar"><span>Windows PowerShell</span></div>
+              <pre><code>$repoUrl = Read-Host 'GitHub HTTPS URL'
+git clone $repoUrl git-pr-practice
+Set-Location git-pr-practice
+git remote -v
+git branch --show-current</code></pre>
+              <pre><code>git switch -c practice/add-notes
+git branch --show-current</code></pre>
+            </div>
+            <div class="notes">
+              <h3>先在 GitHub 網頁操作</h3>
+              <ol class="compact-list"><li>選 <strong>New repository</strong>。</li><li>加入 README，再建立儲存庫。</li><li>從 <strong>Code</strong> 複製 HTTPS 網址。</li></ol>
+              <h3>複製後先檢查</h3><p>確認 <code>origin</code> 指向自己的儲存庫，並在新建分支前記下預設分支名稱。</p>
+            </div>
+          </div>
+          <p class="slide-source"><a href="../wiki/exercises/first-pull-request.md">Wiki｜開出第一個 GitHub Pull Request</a></p>
+        </section>
+
+        <section class="slide" id="push" data-chapter="prepare-pr" aria-labelledby="title-push">
+          <header class="slide-heading">
+            <p class="eyebrow">PR 實作 · 提交與推送</p>
+            <h2 id="title-push">把練習分支推到 GitHub</h2>
+            <p>確認目前在 <code>practice/add-notes</code>，再新增 <code>notes.txt</code>。</p>
+          </header>
+          <div class="lesson-grid">
+            <div class="terminal">
+              <div class="terminal-bar"><span>Windows PowerShell</span></div>
+              <pre><code>Set-Content -LiteralPath notes.txt -Value 'I created my first pull request.'
+git add -- notes.txt
+git --no-pager diff --staged -- notes.txt
+git commit -m "Add first PR practice notes"
+git push -u origin practice/add-notes
+git status --short --branch</code></pre>
+            </div>
+            <div class="notes">
+              <h3>提交前</h3><p>差異應只包含這次新增的文字。</p>
+              <h3>推送後</h3><p>狀態應顯示分支追蹤 <code>origin/practice/add-notes</code>。如果認證失敗，先核對 <code>origin</code> 和登入帳號。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="slide" id="open-pr" data-chapter="open-pr" aria-labelledby="title-open-pr">
+          <header class="slide-heading">
+            <p class="eyebrow">PR 實作 · GitHub 網頁</p>
+            <h2 id="title-open-pr">開出第一個 Pull Request</h2>
+            <p>先備條件是 GitHub 上看得到你推送的 <code>practice/add-notes</code>。</p>
+          </header>
+          <div class="pr-flow" role="group" aria-label="PR 比對方向，從來源分支到目標分支">
+            <div><span>來源 · compare</span><code>practice/add-notes</code></div>
+            <span aria-hidden="true">→</span>
+            <div><span>目標 · base</span><span>儲存庫的預設分支</span></div>
+          </div>
+          <div class="lesson-grid">
+            <ol class="action-list">
+              <li>在儲存庫選擇 <strong>Compare &amp; pull request</strong>，或從 <strong>Pull requests</strong> 開始。</li>
+              <li>將 <strong>base</strong> 設為預設分支，<strong>compare</strong> 設為 <code>practice/add-notes</code>。</li>
+              <li>確認差異、填寫標題與說明，按 <strong>Create pull request</strong>。</li>
+            </ol>
+            <div class="check-card">
+              <span class="status-pill">Open</span>
+              <h3>完成檢查</h3>
+              <ul><li>PR 狀態為 Open。</li><li>目標與來源分支正確。</li><li>Files changed 只顯示 <code>notes.txt</code>。</li></ul>
+              <p>保留 PR 網址作為練習結果。</p>
+            </div>
+          </div>
+          <p class="slide-source"><a href="../wiki/exercises/first-pull-request.md">Wiki｜完整實作</a><a href="../wiki/sources/index.md">教材來源</a></p>
+        </section>
+      </main>
+
+      <div class="controls" id="controls" hidden>
+        <div class="progress-group">
+          <span id="page-count" aria-live="polite"></span>
+          <progress id="progress" aria-label="閱讀進度" value="1" max="14"></progress>
+          <span class="keyboard-hint" aria-hidden="true"><kbd>←</kbd><kbd>→</kbd> 翻頁</span>
+        </div>
+        <div class="step-buttons">
+          <button id="previous" class="secondary" type="button">上一頁</button>
+          <button id="next" class="primary" type="button">下一頁</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="copy-status" class="sr-only" role="status"></div>
+</body>
+</html>
